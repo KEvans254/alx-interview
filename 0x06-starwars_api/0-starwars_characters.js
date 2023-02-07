@@ -1,53 +1,20 @@
 #!/usr/bin/node
-
+/* Star Wars Characters - Using the request module */
 const request = require('request');
-
+const urlApi = 'https://swapi-api.hbtn.io/api/films/';
 const movieId = process.argv[2];
-const filmEndPoint = 'https://swapi-api.hbtn.io/api/films/' + movieId;
-let people = [];
-const names = [];
-
-const requestCharacters = async () => {
-  await new Promise(resolve => request(filmEndPoint, (err, res, body) => {
-    if (err || res.statusCode !== 200) {
-      console.error('Error: ', err, '| StatusCode: ', res.statusCode);
-    } else {
-      const jsonBody = JSON.parse(body);
-      people = jsonBody.characters;
-      resolve();
-    }
-  }));
+// query API
+request(urlApi + movieId, (error, response, body) => {
+  if (error) throw error;
+  const characters = JSON.parse(body).characters;
+  showNames(characters);
+});
+// show results on the console
+const showNames = (names, i = 0) => {
+  if (i === names.length) return;
+  request(names[i], (error, response, body) => {
+    if (error) throw error;
+    console.log(JSON.parse(body).name);
+    showNames(names, i + 1);
+  });
 };
-
-const requestNames = async () => {
-  if (people.length > 0) {
-    for (const p of people) {
-      await new Promise(resolve => request(p, (err, res, body) => {
-        if (err || res.statusCode !== 200) {
-          console.error('Error: ', err, '| StatusCode: ', res.statusCode);
-        } else {
-          const jsonBody = JSON.parse(body);
-          names.push(jsonBody.name);
-          resolve();
-        }
-      }));
-    }
-  } else {
-    console.error('Error: Got no Characters for some reason');
-  }
-};
-
-const getCharNames = async () => {
-  await requestCharacters();
-  await requestNames();
-
-  for (const n of names) {
-    if (n === names[names.length - 1]) {
-      process.stdout.write(n);
-    } else {
-      process.stdout.write(n + '\n');
-    }
-  }
-};
-
-getCharNames();
